@@ -5,16 +5,18 @@ import { getNextSevenDays } from '../utils/dateUtils';
 import { kelvinToCelcius } from '../utils/unitConversion';
 import { setIsError, setIsInitial, setIsLoading } from './reducers/appReducer';
 
+
 export const fetchWeather = createAsyncThunk(
   'weather/fetchWeather',
-  async (city: string | { lat: number; lng: number }, { dispatch, rejectWithValue, fulfillWithValue }) => {
+  async (city: string | { lat: number; lng: number }, { dispatch, rejectWithValue }) => {
+    console.log(city instanceof String)
+    console.log( city instanceof Object)
     dispatch(setIsLoading(true));
-    const crds = await Promise.all([fetchCoordsCity(city)])      
-    console.log(crds)
-    dispatch(setIsLoading(false));
-    try {
-      const res = await Promise.all([fetchWeatherData(crds[0]), fetchExtendedForecastData(city.toString(), crds[0].lat, crds[0].lng)]);
-      
+    let crds, res: Array<any>;
+    if (city instanceof Object === false) {
+      crds = await Promise.all([fetchCoordsCity(city)])
+      res = await Promise.all([fetchWeatherData(crds[0]), fetchExtendedForecastData(city.toString(), crds[0].lat, crds[0].lng)]);
+       try {      
       console.log(res[0])
       if (res[0].cod === 200) {
         dispatch(setIsInitial(false));
@@ -23,24 +25,45 @@ export const fetchWeather = createAsyncThunk(
       } else { 
         dispatch(setIsError(true));
       }
-      return rejectWithValue(res[0].message);
     } catch { 
       dispatch(setIsLoading(false));
       dispatch(setIsError(false));
       return rejectWithValue('Error');      
+    }
+    } else {
+      let res;
+      console.log(city)
+      if(typeof city==='object' && city.lat && city.lng)
+        res = await Promise.all([fetchWeatherData(city), fetchExtendedForecastData(city.toString(), city?.lat, city?.lng)]);
+      try {
+        if (res) { 
+          dispatch(setIsLoading(false));
+        if (res[0].cod === 200) {
+        dispatch(setIsInitial(false));
+        dispatch(setIsError(false));
+        return res;
+      } else { 
+        dispatch(setIsError(true));
+        }
+        }
+      } catch { 
+      dispatch(setIsLoading(false));
+      dispatch(setIsError(false));
+      return rejectWithValue('Error');      
+    }      
     }
   }
 );
 
 export const transformWeatherData = (
   res: any
-): {
-  weather: WeatherData;
-  forecast: ExtendedForecastData[];
-} => {
-  const weather = res[0] as WeatherData;
-  console.log(res)
-
+): {  weather: WeatherData;forecast: ExtendedForecastData[];}| null => {
+  console.log(res, res === undefined)  
+  if (res === undefined) {
+      return null;
+  } else
+  { 
+  const weather = res[0] as WeatherData;  
   const forecast: ExtendedForecastData[] = [];
   weather.weather = res[0].weather[0];
   weather.main = {
@@ -71,9 +94,8 @@ export const transformWeatherData = (
   return {
     weather,
     forecast,
-  };
+  };  
+  }  
 };
-function dispatch(arg0: { payload: boolean; type: string; }) {
-  throw new Error('Function not implemented.');
-}
+
 

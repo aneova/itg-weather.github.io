@@ -22,10 +22,10 @@ const Home = () => {
       <div>
         <Header />
           <Search />
-        The user is <b>{isError ? <>
+        {isError ? <>
           <Error /></>
           :
-          <><CurrentWeather /><Forecast /><Footer /></>}</b>
+          <><CurrentWeather /><Forecast /><Footer /></>}
       </div>      
     </>
   );
