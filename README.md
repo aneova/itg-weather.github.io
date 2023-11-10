@@ -6,8 +6,8 @@ Weather App built with React.
 
 ## Features
 
-- **Weather forecast for any city or place**
-- **Extended 7 days forecast**
+- **Weather 8 forecast for any city or place**
+- **Extended  days forecast**
 - **One-click Celcius to Fahrenheit conversion and vice versa**
 
 ## Getting Started
